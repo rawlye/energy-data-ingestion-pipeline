@@ -1,4 +1,5 @@
 import random
+from pathlib import Path
 
 from openpyxl import Workbook
 
@@ -74,6 +75,9 @@ def write_sheet(workbook: Workbook, title: str, projects: list[dict]) -> None:
 
 if __name__ == "__main__":
     random.seed(42)
+    output_dir = Path(__file__).parents[2] / "data" / "incoming"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     solar_projects = generate_solar_projects(5)
     wind_projects = generate_wind_projects(5)
     bess_projects = generate_bess_projects(5)
@@ -85,4 +89,4 @@ if __name__ == "__main__":
     write_sheet(workbook, "Wind", wind_projects)
     write_sheet(workbook, "BESS", bess_projects)
 
-    workbook.save("test.xlsx")
+    workbook.save(output_dir / "projects.xlsx")

@@ -8,6 +8,8 @@ wheels/
 scratch.py
 test.xlsx
 cheatsheet.md
+data/
+.DS_Store
 
 # Virtual environments
 .venv
