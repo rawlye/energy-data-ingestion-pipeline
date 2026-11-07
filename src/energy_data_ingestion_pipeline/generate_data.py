@@ -1,5 +1,7 @@
 import random
 
+from openpyxl import Workbook
+
 PLACES = [
     "Brno",
     "Praha",
@@ -62,11 +64,25 @@ def generate_bess_projects(count: int) -> list[dict]:
     return bess_projects
 
 
+def write_sheet(workbook: Workbook, title: str, projects: list[dict]) -> None:
+    sheet = workbook.create_sheet(title)
+    headers = list(projects[0].keys())
+    sheet.append(headers)
+    for project in projects:
+        sheet.append(list(project.values()))
+
+
 if __name__ == "__main__":
     random.seed(42)
-    result = generate_solar_projects(5)
-    print(result)
-    wind_result = generate_wind_projects(3)
-    print(wind_result)
-    bess_result = generate_bess_projects(5)
-    print(bess_result)
+    solar_projects = generate_solar_projects(5)
+    wind_projects = generate_wind_projects(5)
+    bess_projects = generate_bess_projects(5)
+
+    workbook = Workbook()
+    workbook.remove(workbook["Sheet"])
+
+    write_sheet(workbook, "Solar", solar_projects)
+    write_sheet(workbook, "Wind", wind_projects)
+    write_sheet(workbook, "BESS", bess_projects)
+
+    workbook.save("test.xlsx")

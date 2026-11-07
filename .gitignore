@@ -5,6 +5,9 @@ build/
 dist/
 wheels/
 *.egg-info
+scratch.py
+test.xlsx
+cheatsheet.md
 
 # Virtual environments
 .venv
