@@ -110,6 +110,33 @@ def is_producing(project: dict, month_start: date) -> bool:
     return is_operating
 
 
+def get_capacity_mw(project: dict) -> float:
+    if "capacity_mwp" in project:
+        return project["capacity_mwp"]
+    elif "capacity_mw" in project:
+        return project["capacity_mw"]
+    elif "power_mw" in project:
+        return project["power_mw"]
+    else:
+        raise ValueError(f"Unknown capacity in {project}")
+
+
+def generate_production_plan(projects: list[dict], month_start: date) -> list[dict]:
+    plan_list = []
+
+    for project in projects:
+        if is_producing(project, month_start):
+            project_plan = {
+                "project_id": project["project_id"],
+                "month": month_start,
+                "planned_energy_mwh": 100,
+                "forecast_version": 1,
+            }
+            plan_list.append(project_plan)
+
+    return plan_list
+
+
 if __name__ == "__main__":
     random.seed(42)
     output_dir = Path(__file__).parents[2] / "data" / "incoming"
@@ -119,6 +146,9 @@ if __name__ == "__main__":
     wind_projects = generate_wind_projects(5)
     bess_projects = generate_bess_projects(5)
 
+    all_projects = solar_projects + wind_projects + bess_projects
+    march_plan = generate_production_plan(all_projects, date(2026, 3, 1))
+
     workbook = Workbook()
     workbook.remove(workbook["Sheet"])
 
@@ -126,4 +156,10 @@ if __name__ == "__main__":
     write_sheet(workbook, "Wind", wind_projects)
     write_sheet(workbook, "BESS", bess_projects)
 
+    workbook_plan = Workbook()
+    workbook_plan.remove(workbook_plan["Sheet"])
+
+    write_sheet(workbook_plan, "Plan", march_plan)
+
     workbook.save(output_dir / "projects.xlsx")
+    workbook_plan.save(output_dir / "production_plan_2026_03.xlsx")
