@@ -20,7 +20,7 @@ REGIONS = ["North", "South", "East", "West"]
 STATUSES = ["planned", "under construction", "operational"]
 BESS_DURATION_HOURS = [1, 2, 4]
 REFERENCE_DATE = date(2026, 11, 7)
-CAPACITY_FACTORS = {"Solar": 0.11, "Wind": 0.27, "BESS": 0.10}
+CAPACITY_FACTORS = {"Solar": 0.11, "Wind": 0.27, "BESS": 0.10, "Hydro": 0.40}
 
 
 def build_base_project(
@@ -74,6 +74,16 @@ def generate_bess_projects(count: int) -> list[dict]:
         )
         bess_projects.append(project)
     return bess_projects
+
+
+def generate_hydro_projects(count: int) -> list[dict]:
+    hydro_projects = []
+
+    for i in range(count):
+        project = build_base_project(i + 1, "HYD", "Hydro Plant", "Hydro")
+        project["capacity_mw"] = round(random.uniform(1, 20), 2)
+        hydro_projects.append(project)
+    return hydro_projects
 
 
 def generate_commissioning_date(status: str) -> date:
@@ -170,8 +180,9 @@ if __name__ == "__main__":
     solar_projects = generate_solar_projects(5)
     wind_projects = generate_wind_projects(5)
     bess_projects = generate_bess_projects(5)
+    hydro_projects = generate_hydro_projects(5)
 
-    all_projects = solar_projects + wind_projects + bess_projects
+    all_projects = solar_projects + wind_projects + bess_projects + hydro_projects
 
     workbook = Workbook()
     workbook.remove(workbook["Sheet"])
@@ -179,6 +190,7 @@ if __name__ == "__main__":
     write_sheet(workbook, "Solar", solar_projects)
     write_sheet(workbook, "Wind", wind_projects)
     write_sheet(workbook, "BESS", bess_projects)
+    write_sheet(workbook, "Hydro", hydro_projects)
 
     workbook.save(output_dir / "projects.xlsx")
 
