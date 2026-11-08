@@ -20,15 +20,19 @@ REGIONS = ["North", "South", "East", "West"]
 STATUSES = ["planned", "under construction", "operational"]
 BESS_DURATION_HOURS = [1, 2, 4]
 REFERENCE_DATE = date(2026, 11, 7)
+CAPACITY_FACTORS = {"Solar": 0.11, "Wind": 0.27, "BESS": 0.10}
 
 
-def build_base_project(number: int, id_prefix: str, name_prefix: str) -> dict:
+def build_base_project(
+    number: int, id_prefix: str, name_prefix: str, technology: str
+) -> dict:
     status = random.choice(STATUSES)
     cod_date = generate_commissioning_date(status=status)
 
     project = {
         "project_id": f"{id_prefix}-{number:03d}",
         "project_name": f"{name_prefix} {random.choice(PLACES)}",
+        "project_type": technology,
         "region": random.choice(REGIONS),
         "status": status,
         "commissioning_date": cod_date,
@@ -41,7 +45,7 @@ def generate_solar_projects(count: int) -> list[dict]:
     solar_projects = []
 
     for i in range(count):
-        project = build_base_project(i + 1, "SOL", "Solar Park")
+        project = build_base_project(i + 1, "SOL", "Solar Park", "Solar")
         project["capacity_mwp"] = round(random.uniform(1, 50), 2)
         solar_projects.append(project)
     return solar_projects
@@ -51,7 +55,7 @@ def generate_wind_projects(count: int) -> list[dict]:
     wind_projects = []
 
     for i in range(count):
-        project = build_base_project(i + 1, "WND", "Wind Park")
+        project = build_base_project(i + 1, "WND", "Wind Park", "Wind")
         project["capacity_mw"] = round(random.uniform(5, 150), 2)
         project["turbine_count"] = random.randint(2, 25)
         wind_projects.append(project)
@@ -63,7 +67,7 @@ def generate_bess_projects(count: int) -> list[dict]:
 
     for i in range(count):
         random_power_mw = round(random.uniform(5, 100), 2)
-        project = build_base_project(i + 1, "BES", "BESS")
+        project = build_base_project(i + 1, "BES", "BESS", "BESS")
         project["power_mw"] = random_power_mw
         project["energy_mwh"] = round(
             random_power_mw * random.choice(BESS_DURATION_HOURS), 2
@@ -135,15 +139,27 @@ def generate_production_plan(projects: list[dict], month_start: date) -> list[di
 
     for project in projects:
         if is_producing(project, month_start):
+            capacity = get_capacity_mw(project)
+            hours = hours_in_month(month_start)
+            factor = get_capacity_factor(project)
+            energy = round((capacity * hours * factor), 2)
+
             project_plan = {
                 "project_id": project["project_id"],
                 "month": month_start,
-                "planned_energy_mwh": 100,
+                "planned_energy_mwh": energy,
                 "forecast_version": 1,
             }
             plan_list.append(project_plan)
 
     return plan_list
+
+
+def get_capacity_factor(project: dict) -> float:
+    project_type = project["project_type"]
+    capacity_factor = CAPACITY_FACTORS[project_type]
+
+    return capacity_factor
 
 
 if __name__ == "__main__":
