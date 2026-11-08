@@ -1,4 +1,5 @@
 import random
+from datetime import date, timedelta
 from pathlib import Path
 
 from openpyxl import Workbook
@@ -17,14 +18,19 @@ PLACES = [
 REGIONS = ["North", "South", "East", "West"]
 STATUSES = ["planned", "under construction", "operational"]
 BESS_DURATION_HOURS = [1, 2, 4]
+REFERENCE_DATE = date(2026, 11, 7)
 
 
 def build_base_project(number: int, id_prefix: str, name_prefix: str) -> dict:
+    status = random.choice(STATUSES)
+    cod_date = generate_commissioning_date(status=status)
+
     project = {
         "project_id": f"{id_prefix}-{number:03d}",
         "project_name": f"{name_prefix} {random.choice(PLACES)}",
         "region": random.choice(REGIONS),
-        "status": random.choice(STATUSES),
+        "status": status,
+        "commissioning_date": cod_date,
     }
 
     return project
@@ -63,6 +69,20 @@ def generate_bess_projects(count: int) -> list[dict]:
         )
         bess_projects.append(project)
     return bess_projects
+
+
+def generate_commissioning_date(status: str) -> date:
+
+    if status == "operational":
+        cod = REFERENCE_DATE - timedelta(days=random.randint(30, 3650))
+    elif status == "under construction":
+        cod = REFERENCE_DATE + timedelta(days=random.randint(30, 365))
+    elif status == "planned":
+        cod = REFERENCE_DATE + timedelta(days=random.randint(365, 1825))
+    else:
+        raise ValueError(f"Unknown status: {status}")
+
+    return cod
 
 
 def write_sheet(workbook: Workbook, title: str, projects: list[dict]) -> None:
