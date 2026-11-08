@@ -93,6 +93,23 @@ def write_sheet(workbook: Workbook, title: str, projects: list[dict]) -> None:
         sheet.append(list(project.values()))
 
 
+def generate_month_starts(year: int) -> list[date]:
+    months = []
+
+    for month in range(1, 13):
+        month_start = date(year, month, 1)
+        months.append(month_start)
+
+    return months
+
+
+def is_producing(project: dict, month_start: date) -> bool:
+    commissioning_date = project["commissioning_date"]
+    is_operating = commissioning_date <= month_start
+
+    return is_operating
+
+
 if __name__ == "__main__":
     random.seed(42)
     output_dir = Path(__file__).parents[2] / "data" / "incoming"
