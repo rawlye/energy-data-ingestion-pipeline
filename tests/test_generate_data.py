@@ -1,6 +1,6 @@
 from datetime import date
 
-from energy_data_ingestion_pipeline.generate_data import is_producing
+from energy_data_ingestion_pipeline.generate_data import hours_in_month, is_producing
 
 
 def test_not_producing_before_commissioning() -> None:
@@ -16,3 +16,15 @@ def test_producing_after_commissioning() -> None:
 def test_producing_from_the_commissioning_day() -> None:
     project = {"commissioning_date": date(2026, 4, 1)}
     assert is_producing(project, date(2026, 4, 1)) is True
+
+
+def test_hours_in_month_2026_feb() -> None:
+    assert hours_in_month(date(2026, 2, 1)) == 672
+
+
+def test_hours_in_month_march_2026() -> None:
+    assert hours_in_month(date(2026, 3, 1)) == 744
+
+
+def test_hours_in_month_feb_2028() -> None:
+    assert hours_in_month(date(2028, 2, 1)) == 696

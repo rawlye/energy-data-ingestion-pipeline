@@ -1,3 +1,4 @@
+import calendar
 import random
 from datetime import date, timedelta
 from pathlib import Path
@@ -119,6 +120,14 @@ def get_capacity_mw(project: dict) -> float:
         return project["power_mw"]
     else:
         raise ValueError(f"Unknown capacity in {project}")
+
+
+def hours_in_month(month_start: date) -> int:
+    year = month_start.year
+    month = month_start.month
+    number_of_days = calendar.monthrange(year, month)[1]
+
+    return number_of_days * 24
 
 
 def generate_production_plan(projects: list[dict], month_start: date) -> list[dict]:
