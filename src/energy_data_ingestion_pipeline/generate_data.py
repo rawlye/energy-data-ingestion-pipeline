@@ -147,7 +147,6 @@ if __name__ == "__main__":
     bess_projects = generate_bess_projects(5)
 
     all_projects = solar_projects + wind_projects + bess_projects
-    march_plan = generate_production_plan(all_projects, date(2026, 3, 1))
 
     workbook = Workbook()
     workbook.remove(workbook["Sheet"])
@@ -156,10 +155,16 @@ if __name__ == "__main__":
     write_sheet(workbook, "Wind", wind_projects)
     write_sheet(workbook, "BESS", bess_projects)
 
-    workbook_plan = Workbook()
-    workbook_plan.remove(workbook_plan["Sheet"])
-
-    write_sheet(workbook_plan, "Plan", march_plan)
-
     workbook.save(output_dir / "projects.xlsx")
-    workbook_plan.save(output_dir / "production_plan_2026_03.xlsx")
+
+    for month_start in generate_month_starts(2026):
+        month_plan = generate_production_plan(all_projects, month_start)
+
+        plan_workbook = Workbook()
+        plan_workbook.remove(plan_workbook["Sheet"])
+
+        write_sheet(plan_workbook, "Plan", month_plan)
+
+        file_name = f"production_plan_{month_start.year}_{month_start.month:02d}.xlsx"
+
+        plan_workbook.save(output_dir / file_name)
