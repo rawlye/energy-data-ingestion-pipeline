@@ -45,14 +45,29 @@ def add_lineage(records: list[dict], file_name: str, sheet_name: str) -> list[di
     return records_with_lineage
 
 
-if __name__ == "__main__":
-    incoming_dir = Path(__file__).parents[2] / "data" / "incoming"
+def extract_records(folder: Path) -> tuple[list[dict], list[dict]]:
+    project_records = []
+    plan_records = []
 
-    for file_path in find_excel_files(incoming_dir):
+    for file_path in find_excel_files(folder):
         workbook = load_workbook(file_path)
 
         for sheet_name in workbook.sheetnames:
             rows = read_sheet_rows(workbook, sheet_name)
             records = rows_to_dict(rows)
             records_with_lineage = add_lineage(records, file_path.name, sheet_name)
-            print(records_with_lineage[0])
+            if file_path.name == "projects.xlsx":
+                project_records.extend(records_with_lineage)
+            elif file_path.name.startswith("production_plan_"):
+                plan_records.extend(records_with_lineage)
+            else:
+                raise ValueError(f"Unknown file format {file_path.name}")
+
+    return project_records, plan_records
+
+
+if __name__ == "__main__":
+    incoming_dir = Path(__file__).parents[2] / "data" / "incoming"
+
+    project_records, plan_records = extract_records(incoming_dir)
+    print(len(project_records), len(plan_records))
