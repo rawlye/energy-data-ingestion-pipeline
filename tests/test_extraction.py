@@ -2,7 +2,11 @@ from pathlib import Path
 
 import pytest
 
-from energy_data_ingestion_pipeline.extract import find_excel_files, rows_to_dict
+from energy_data_ingestion_pipeline.extract import (
+    add_lineage,
+    find_excel_files,
+    rows_to_dict,
+)
 
 
 def test_finds_only_xlsx_files(tmp_path: Path) -> None:
@@ -52,3 +56,31 @@ def test_sheet_with_only_header_gives_an_empty_list() -> None:
     records = rows_to_dict(list_with_only_headers)
 
     assert records == []
+
+
+def test_lineage() -> None:
+    file_name = "projects.xlsx"
+    sheet_name = "Projects"
+    row = [
+        {"project": "SOL-001", "type": "Solar"},
+        {"project": "SOL-002", "type": "Solar"},
+    ]
+
+    lineage_rows = add_lineage(row, file_name, sheet_name)
+
+    assert lineage_rows == [
+        {
+            "project": "SOL-001",
+            "type": "Solar",
+            "source_file": "projects.xlsx",
+            "source_sheet": "Projects",
+            "source_row": 2,
+        },
+        {
+            "project": "SOL-002",
+            "type": "Solar",
+            "source_file": "projects.xlsx",
+            "source_sheet": "Projects",
+            "source_row": 3,
+        },
+    ]
