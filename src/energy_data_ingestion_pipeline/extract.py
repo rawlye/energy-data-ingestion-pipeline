@@ -33,6 +33,18 @@ def rows_to_dict(rows: list[tuple]) -> list[dict]:
     return result
 
 
+def add_lineage(records: list[dict], file_name: str, sheet_name: str) -> list[dict]:
+    records_with_lineage = []
+
+    for position in range(len(records)):
+        record_copy = dict(records[position])
+        record_copy["source_file"] = file_name
+        record_copy["source_sheet"] = sheet_name
+        record_copy["source_row"] = position + 2
+        records_with_lineage.append(record_copy)
+    return records_with_lineage
+
+
 if __name__ == "__main__":
     incoming_dir = Path(__file__).parents[2] / "data" / "incoming"
 
@@ -42,4 +54,5 @@ if __name__ == "__main__":
         for sheet_name in workbook.sheetnames:
             rows = read_sheet_rows(workbook, sheet_name)
             records = rows_to_dict(rows)
-            print(file_path.name, sheet_name, records[0])
+            records_with_lineage = add_lineage(records, file_path.name, sheet_name)
+            print(records_with_lineage[0])
