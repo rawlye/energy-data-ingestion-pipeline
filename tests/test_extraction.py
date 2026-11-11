@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from energy_data_ingestion_pipeline.extract import find_excel_files
+from energy_data_ingestion_pipeline.extract import find_excel_files, rows_to_dict
 
 
 def test_finds_only_xlsx_files(tmp_path: Path) -> None:
@@ -35,3 +35,20 @@ def test_missing_folder_raises(tmp_path: Path) -> None:
 
     with pytest.raises(FileNotFoundError):
         find_excel_files(missing_folder)
+
+
+def test_headers_become_keys() -> None:
+    list_of_tuples = [("project", "type"), ("SOL-001", "FVE"), ("WIN-01", "Wind")]
+    records = rows_to_dict(list_of_tuples)
+
+    assert records == [
+        {"project": "SOL-001", "type": "FVE"},
+        {"project": "WIN-01", "type": "Wind"},
+    ]
+
+
+def test_sheet_with_only_header_gives_an_empty_list() -> None:
+    list_with_only_headers = [("project", "type")]
+    records = rows_to_dict(list_with_only_headers)
+
+    assert records == []
