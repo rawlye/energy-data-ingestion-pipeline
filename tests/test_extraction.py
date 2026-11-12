@@ -1,12 +1,23 @@
 from pathlib import Path
 
 import pytest
+from openpyxl import Workbook
 
 from energy_data_ingestion_pipeline.extract import (
     add_lineage,
+    extract_records,
     find_excel_files,
     rows_to_dict,
 )
+
+
+def make_workbook(file_path: Path, sheet_name: str, rows: list[tuple]) -> None:
+    workbook = Workbook()
+    workbook.remove(workbook["Sheet"])
+    sheet = workbook.create_sheet(sheet_name)
+    for row in rows:
+        sheet.append(row)
+    workbook.save(file_path)
 
 
 def test_finds_only_xlsx_files(tmp_path: Path) -> None:
@@ -84,3 +95,50 @@ def test_lineage() -> None:
             "source_row": 3,
         },
     ]
+
+
+def test_extracting_records(tmp_path: Path) -> None:
+
+    make_workbook(
+        tmp_path / "projects.xlsx",
+        "Solar",
+        [("project_id", "type"), ("SOL-001", "FVE")],
+    )
+    make_workbook(
+        tmp_path / "production_plan_2026_01.xlsx",
+        "Plan",
+        [("project_id", "region"), ("SOL-001", "West")],
+    )
+
+    projects, plans = extract_records(tmp_path)
+
+    assert projects == [
+        {
+            "project_id": "SOL-001",
+            "type": "FVE",
+            "source_file": "projects.xlsx",
+            "source_sheet": "Solar",
+            "source_row": 2,
+        }
+    ]
+
+    assert plans == [
+        {
+            "project_id": "SOL-001",
+            "region": "West",
+            "source_file": "production_plan_2026_01.xlsx",
+            "source_sheet": "Plan",
+            "source_row": 2,
+        }
+    ]
+
+
+def test_unknown_file_raises_error(tmp_path: Path) -> None:
+    make_workbook(
+        tmp_path / "budget.xlsx",
+        "Budget",
+        [("project_id", "region"), ("SOL-001", "West")],
+    )
+
+    with pytest.raises(ValueError):
+        extract_records(tmp_path)
