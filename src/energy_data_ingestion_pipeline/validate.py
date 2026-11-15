@@ -32,11 +32,30 @@ def validate_record(record: dict) -> list[str]:
     return errors_list
 
 
+def validate_records(records: list[dict]) -> tuple[list[dict], list[dict]]:
+    valid_rows = []
+    invalid_rows = []
+
+    for record in records:
+        validation_result = validate_record(record)
+
+        if validation_result != []:
+            rejected_record = record.copy()
+            rejected_record["reject_reason"] = validation_result
+            invalid_rows.append(rejected_record)
+        else:
+            valid_rows.append(record)
+    return valid_rows, invalid_rows
+
+
 if __name__ == "__main__":
     validation_rows = [
         {"project_id": "SOL-001", "status": "operational"},
         {"project_id": "", "status": "Operational"},
+        {"project_id": "SOL-001", "status": "Operational"},
     ]
 
-    for record in validation_rows:
-        print(validate_record(record))
+    valid_rows, invalid_rows = validate_records(validation_rows)
+
+    print(valid_rows)
+    print(invalid_rows)

@@ -2,6 +2,7 @@ from energy_data_ingestion_pipeline.validate import (
     check_project_id_present,
     check_status_allowed,
     validate_record,
+    validate_records,
 )
 
 
@@ -38,3 +39,31 @@ def test_validation_record() -> None:
         "project_id is missing",
         "status Operational is not allowed",
     ]
+
+
+def test_validate_records() -> None:
+    rows = [
+        {"project_id": "SOL-001", "status": "operational"},
+        {"project_id": "", "status": "Operational"},
+        {"project_id": "SOL-001", "status": "Operational"},
+    ]
+
+    valid_rows, invalid_rows = validate_records(rows)
+
+    assert valid_rows == [{"project_id": "SOL-001", "status": "operational"}]
+    assert invalid_rows == [
+        {
+            "project_id": "",
+            "status": "Operational",
+            "reject_reason": [
+                "project_id is missing",
+                "status Operational is not allowed",
+            ],
+        },
+        {
+            "project_id": "SOL-001",
+            "status": "Operational",
+            "reject_reason": ["status Operational is not allowed"],
+        },
+    ]
+    assert "reject_reason" not in rows[1]
