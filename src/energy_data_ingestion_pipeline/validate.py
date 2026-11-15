@@ -19,15 +19,24 @@ def check_status_allowed(record: dict) -> str | None:
     return None
 
 
+RULES = [check_project_id_present, check_status_allowed]
+
+
+def validate_record(record: dict) -> list[str]:
+    errors_list = []
+
+    for rule in RULES:
+        validation_result = rule(record)
+        if validation_result is not None:
+            errors_list.append(validation_result)
+    return errors_list
+
+
 if __name__ == "__main__":
-    rows = [
-        {"status": "operational"},
-        {"status": "Operational"},
-        {"project_id": "SOL-001"},
+    validation_rows = [
+        {"project_id": "SOL-001", "status": "operational"},
+        {"project_id": "", "status": "Operational"},
     ]
 
-    for row in rows:
-        validation_id = check_project_id_present(row)
-        validation_status = check_status_allowed(row)
-        print(validation_id)
-        print(validation_status)
+    for record in validation_rows:
+        print(validate_record(record))
