@@ -13,7 +13,7 @@ def run(folder: Path) -> None:
     print(f"invalid rows: {len(invalid_rows)}")
 
     for row in invalid_rows:
-        print(row["source_row"], row["reject_reason"])
+        print(row["source_sheet"], row["source_row"], row["reject_reason"])
 
 
 if __name__ == "__main__":
