@@ -21,7 +21,13 @@ STATUSES = ["planned", "under construction", "operational"]
 BESS_DURATION_HOURS = [1, 2, 4]
 REFERENCE_DATE = date(2026, 11, 7)
 CAPACITY_FACTORS = {"Solar": 0.11, "Wind": 0.27, "BESS": 0.10, "Hydro": 0.40}
-DEFECT_PROJECT_IDS = ("SOL-002", "WND-002", "BES-002", "HYD-002")
+DEFECTS = {
+    "SOL-002": ("status", "Operational"),
+    "WND-002": ("status", "Operational"),
+    "BES-002": ("status", "Operational"),
+    "HYD-002": ("status", "Operational"),
+    "SOL-003": ("status", "operationl"),
+}
 
 
 def build_base_project(
@@ -177,9 +183,10 @@ def inject_defects(records: list[dict]) -> list[dict]:
     modified_rows = []
 
     for record in records:
-        if record["project_id"] in DEFECT_PROJECT_IDS:
+        if record["project_id"] in DEFECTS:
             modified_record = record.copy()
-            modified_record["status"] = "Operational"
+            field, bad_value = DEFECTS[record["project_id"]]
+            modified_record[field] = bad_value
             modified_rows.append(modified_record)
         else:
             modified_rows.append(record)
