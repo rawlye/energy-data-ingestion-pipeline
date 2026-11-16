@@ -21,6 +21,7 @@ STATUSES = ["planned", "under construction", "operational"]
 BESS_DURATION_HOURS = [1, 2, 4]
 REFERENCE_DATE = date(2026, 11, 7)
 CAPACITY_FACTORS = {"Solar": 0.11, "Wind": 0.27, "BESS": 0.10, "Hydro": 0.40}
+DEFECT_PROJECT_IDS = ("SOL-002", "WND-002", "BES-002", "HYD-002")
 
 
 def build_base_project(
@@ -172,15 +173,28 @@ def get_capacity_factor(project: dict) -> float:
     return capacity_factor
 
 
+def inject_defects(records: list[dict]) -> list[dict]:
+    modified_rows = []
+
+    for record in records:
+        if record["project_id"] in DEFECT_PROJECT_IDS:
+            modified_record = record.copy()
+            modified_record["status"] = "Operational"
+            modified_rows.append(modified_record)
+        else:
+            modified_rows.append(record)
+    return modified_rows
+
+
 if __name__ == "__main__":
     random.seed(42)
     output_dir = Path(__file__).parents[2] / "data" / "incoming"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    solar_projects = generate_solar_projects(5)
-    wind_projects = generate_wind_projects(5)
-    bess_projects = generate_bess_projects(5)
-    hydro_projects = generate_hydro_projects(5)
+    solar_projects = inject_defects(generate_solar_projects(5))
+    wind_projects = inject_defects(generate_wind_projects(5))
+    bess_projects = inject_defects(generate_bess_projects(5))
+    hydro_projects = inject_defects(generate_hydro_projects(5))
 
     all_projects = solar_projects + wind_projects + bess_projects + hydro_projects
 
