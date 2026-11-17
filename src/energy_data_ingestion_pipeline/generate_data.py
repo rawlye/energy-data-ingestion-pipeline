@@ -27,6 +27,7 @@ DEFECTS = {
     "BES-002": ("status", "Operational"),
     "HYD-002": ("status", "Operational"),
     "SOL-003": ("status", "operationl"),
+    "WND-003": ("capacity_mw", -5),
 }
 
 
