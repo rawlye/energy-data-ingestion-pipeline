@@ -1,4 +1,5 @@
 from energy_data_ingestion_pipeline.validate import (
+    check_capacity_positive,
     check_project_id_present,
     check_status_allowed,
     validate_record,
@@ -67,3 +68,19 @@ def test_validate_records() -> None:
         },
     ]
     assert "reject_reason" not in rows[1]
+
+
+def test_check_wrong_capacity_is_rejected() -> None:
+    records = [
+        {"project_type": "Solar", "capacity_mwp": 12.5},
+        {"project_type": "Wind", "capacity_mw": -5},
+        {"project_type": "Solar"},
+        {"project_type": "Aero", "capacity_mw": 6},
+        {"project_type": "Solar", "capacity_mwp": "n/a"},
+    ]
+
+    assert check_capacity_positive(records[0]) is None
+    assert check_capacity_positive(records[1]) == "capacity_mw must be > 0, got -5"
+    assert check_capacity_positive(records[2]) == "capacity_mwp is missing"
+    assert check_capacity_positive(records[3]) is None
+    assert check_capacity_positive(records[4]) == "capacity_mwp is not a number"

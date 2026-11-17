@@ -6,7 +6,7 @@ from energy_data_ingestion_pipeline.validate import validate_records
 
 
 def run(folder: Path) -> None:
-    project_records, plan_records = extract_records(folder)
+    project_records, _plan_records = extract_records(folder)
 
     cleaned_records = clean_records(project_records)
 
