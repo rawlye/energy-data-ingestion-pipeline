@@ -1,15 +1,4 @@
-ALLOWED_STATUSES = [
-    "planned",
-    "under construction",
-    "operational",
-]
-
-CAPACITY_FIELDS = {
-    "Solar": "capacity_mwp",
-    "Wind": "capacity_mw",
-    "BESS": "power_mw",
-    "Hydro": "capacity_mw",
-}
+from energy_data_ingestion_pipeline.schema import ALLOWED_STATUSES, CAPACITY_FIELDS
 
 
 def check_project_id_present(record: dict) -> str | None:
