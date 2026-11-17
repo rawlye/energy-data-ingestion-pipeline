@@ -8,6 +8,14 @@ from energy_data_ingestion_pipeline.validate import (
     validate_records,
 )
 
+VALID_RECORD = {
+    "project_id": "SOL-001",
+    "project_type": "Solar",
+    "status": "operational",
+    "commissioning_date": date(2025, 1, 1),
+    "capacity_mwp": 12.5,
+}
+
 
 def test_check_project_id_present() -> None:
     rows = [{"status": "operational"}, {"project_id": "SOL-001"}, {"project_id": ""}]
@@ -30,78 +38,40 @@ def test_check_status_allowed() -> None:
 
 
 def test_validation_record() -> None:
-    validation_rows = [
-        {
-            "project_id": "SOL-001",
-            "status": "operational",
-            "commissioning_date": date(2025, 1, 1),
-        },
-        {
-            "project_id": "SOL-001",
-            "status": "Operational",
-            "commissioning_date": date(2025, 1, 1),
-        },
-        {
-            "project_id": "",
-            "status": "Operational",
-            "commissioning_date": date(2025, 1, 1),
-        },
-    ]
+    wrong_status = VALID_RECORD | {"status": "Operational"}
+    wrong_id_and_status = VALID_RECORD | {"project_id": "", "status": "Operational"}
 
-    assert validate_record(validation_rows[0]) == []
-    assert validate_record(validation_rows[1]) == ["status Operational is not allowed"]
-    assert validate_record(validation_rows[2]) == [
+    assert validate_record(VALID_RECORD) == []
+    assert validate_record(wrong_status) == ["status Operational is not allowed"]
+    assert validate_record(wrong_id_and_status) == [
         "project_id is missing",
         "status Operational is not allowed",
     ]
 
 
 def test_validate_records() -> None:
-    rows = [
-        {
-            "project_id": "SOL-001",
-            "status": "operational",
-            "commissioning_date": date(2025, 1, 1),
-        },
-        {
-            "project_id": "",
-            "status": "Operational",
-            "commissioning_date": date(2025, 1, 1),
-        },
-        {
-            "project_id": "SOL-001",
-            "status": "Operational",
-            "commissioning_date": date(2025, 1, 1),
-        },
-    ]
+    wrong_status = VALID_RECORD | {"status": "Operational"}
+    wrong_id_and_status = VALID_RECORD | {"project_id": "", "status": "Operational"}
+    rows = [VALID_RECORD, wrong_id_and_status, wrong_status]
 
     valid_rows, invalid_rows = validate_records(rows)
 
-    assert valid_rows == [
-        {
-            "project_id": "SOL-001",
-            "status": "operational",
-            "commissioning_date": date(2025, 1, 1),
-        }
-    ]
+    assert valid_rows == [VALID_RECORD]
+
     assert invalid_rows == [
-        {
-            "project_id": "",
-            "status": "Operational",
-            "commissioning_date": date(2025, 1, 1),
+        wrong_id_and_status
+        | {
             "reject_reason": [
                 "project_id is missing",
                 "status Operational is not allowed",
-            ],
+            ]
         },
-        {
-            "project_id": "SOL-001",
-            "status": "Operational",
-            "commissioning_date": date(2025, 1, 1),
-            "reject_reason": ["status Operational is not allowed"],
-        },
+        wrong_status | {"reject_reason": ["status Operational is not allowed"]},
     ]
-    assert "reject_reason" not in rows[1]  # checking that the original is untouched
+
+    assert (
+        "reject_reason" not in wrong_status  # checking that the original is untouched
+    )
 
 
 def test_check_wrong_capacity_is_rejected() -> None:
