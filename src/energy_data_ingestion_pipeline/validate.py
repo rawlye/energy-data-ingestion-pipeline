@@ -1,3 +1,5 @@
+from datetime import date
+
 from energy_data_ingestion_pipeline.schema import ALLOWED_STATUSES, CAPACITY_FIELDS
 
 
@@ -32,7 +34,25 @@ def check_capacity_positive(record: dict) -> str | None:
         return None
 
 
-RULES = [check_project_id_present, check_status_allowed, check_capacity_positive]
+def check_cod_valid(record: dict) -> str | None:
+    cod = record.get("commissioning_date")
+
+    if cod is None:
+        return "commissioning_date is missing"
+    elif not isinstance(cod, date):
+        return f"commissioning_date is not a date: {cod}"
+    elif not 2000 <= cod.year <= 2050:
+        return f"commissioning_date outside the sanity year range 2000-2050: {cod.year}"
+    else:
+        return None
+
+
+RULES = [
+    check_project_id_present,
+    check_status_allowed,
+    check_capacity_positive,
+    check_cod_valid,
+]
 
 
 def validate_record(record: dict) -> list[str]:
