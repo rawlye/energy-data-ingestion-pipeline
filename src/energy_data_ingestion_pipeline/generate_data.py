@@ -28,6 +28,8 @@ DEFECTS = {
     "HYD-002": ("status", "Operational"),
     "SOL-003": ("status", "operationl"),
     "WND-003": ("capacity_mw", -5),
+    "BES-003": ("power_mw", "7,5"),
+    "HYD-003": ("capacity_mw", "n/a"),
 }
 
 
@@ -199,20 +201,20 @@ if __name__ == "__main__":
     output_dir = Path(__file__).parents[2] / "data" / "incoming"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    solar_projects = inject_defects(generate_solar_projects(5))
-    wind_projects = inject_defects(generate_wind_projects(5))
-    bess_projects = inject_defects(generate_bess_projects(5))
-    hydro_projects = inject_defects(generate_hydro_projects(5))
+    solar_projects = generate_solar_projects(5)
+    wind_projects = generate_wind_projects(5)
+    bess_projects = generate_bess_projects(5)
+    hydro_projects = generate_hydro_projects(5)
 
     all_projects = solar_projects + wind_projects + bess_projects + hydro_projects
 
     workbook = Workbook()
     workbook.remove(workbook["Sheet"])
 
-    write_sheet(workbook, "Solar", solar_projects)
-    write_sheet(workbook, "Wind", wind_projects)
-    write_sheet(workbook, "BESS", bess_projects)
-    write_sheet(workbook, "Hydro", hydro_projects)
+    write_sheet(workbook, "Solar", inject_defects(solar_projects))
+    write_sheet(workbook, "Wind", inject_defects(wind_projects))
+    write_sheet(workbook, "BESS", inject_defects(bess_projects))
+    write_sheet(workbook, "Hydro", inject_defects(hydro_projects))
 
     workbook.save(output_dir / "projects.xlsx")
 
