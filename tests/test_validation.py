@@ -2,6 +2,7 @@ from datetime import date
 
 from energy_data_ingestion_pipeline.validate import (
     check_capacity_positive,
+    check_cod_valid,
     check_project_id_present,
     check_status_allowed,
     validate_record,
@@ -88,3 +89,19 @@ def test_check_wrong_capacity_is_rejected() -> None:
     assert check_capacity_positive(records[2]) == "capacity_mwp is missing"
     assert check_capacity_positive(records[3]) is None
     assert check_capacity_positive(records[4]) == "capacity_mwp is not a number"
+
+
+def test_cod_rules() -> None:
+    cod_none = {"project_id": "SOL-001"}
+    cod_no_date = {"project_id": "SOL-001", "commissioning_date": "n/a"}
+    cod_wrong_date = {"project_id": "SOL-001", "commissioning_date": date(2051, 1, 1)}
+    cod_2050_date = {"project_id": "SOL-001", "commissioning_date": date(2050, 1, 1)}
+
+    assert check_cod_valid(cod_none) == "commissioning_date is missing"
+    assert check_cod_valid(cod_no_date) == "commissioning_date is not a date: n/a"
+    assert (
+        check_cod_valid(cod_wrong_date)
+        == "commissioning_date outside the sanity year range 2000-2050: 2051"
+    )
+    assert check_cod_valid(VALID_RECORD) is None
+    assert check_cod_valid(cod_2050_date) is None
