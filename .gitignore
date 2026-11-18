@@ -5,11 +5,11 @@ build/
 dist/
 wheels/
 *.egg-info
-scratch.py
 test.xlsx
 cheatsheet.md
 data/
 .DS_Store
+scratch/
 
 # Virtual environments
 .venv
