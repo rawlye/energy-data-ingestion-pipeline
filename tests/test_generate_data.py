@@ -1,6 +1,10 @@
 from datetime import date
 
-from energy_data_ingestion_pipeline.generate_data import hours_in_month, is_producing
+from energy_data_ingestion_pipeline.generate_data import (
+    hours_in_month,
+    inject_defects,
+    is_producing,
+)
 
 
 def test_not_producing_before_commissioning() -> None:
@@ -28,3 +32,14 @@ def test_hours_in_month_march_2026() -> None:
 
 def test_hours_in_month_feb_2028() -> None:
     assert hours_in_month(date(2028, 2, 1)) == 696
+
+
+def test_defect_projects_gets_wrong_status() -> None:
+    records = [
+        {"project_id": "SOL-002", "status": "operational"},
+    ]
+
+    modified_records = inject_defects(records)
+
+    assert modified_records[0]["status"] == "Operational"
+    assert records[0]["status"] == "operational"

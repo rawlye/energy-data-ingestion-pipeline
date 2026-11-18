@@ -21,6 +21,16 @@ STATUSES = ["planned", "under construction", "operational"]
 BESS_DURATION_HOURS = [1, 2, 4]
 REFERENCE_DATE = date(2026, 11, 7)
 CAPACITY_FACTORS = {"Solar": 0.11, "Wind": 0.27, "BESS": 0.10, "Hydro": 0.40}
+DEFECTS = {
+    "SOL-002": ("status", "Operational"),
+    "WND-002": ("status", "Operational"),
+    "BES-002": ("status", "Operational"),
+    "HYD-002": ("status", "Operational"),
+    "SOL-003": ("status", "operationl"),
+    "WND-003": ("capacity_mw", -5),
+    "BES-003": ("power_mw", "7,5"),
+    "HYD-003": ("capacity_mw", "n/a"),
+}
 
 
 def build_base_project(
@@ -172,6 +182,20 @@ def get_capacity_factor(project: dict) -> float:
     return capacity_factor
 
 
+def inject_defects(records: list[dict]) -> list[dict]:
+    modified_rows = []
+
+    for record in records:
+        if record["project_id"] in DEFECTS:
+            modified_record = record.copy()
+            field, bad_value = DEFECTS[record["project_id"]]
+            modified_record[field] = bad_value
+            modified_rows.append(modified_record)
+        else:
+            modified_rows.append(record)
+    return modified_rows
+
+
 if __name__ == "__main__":
     random.seed(42)
     output_dir = Path(__file__).parents[2] / "data" / "incoming"
@@ -187,10 +211,10 @@ if __name__ == "__main__":
     workbook = Workbook()
     workbook.remove(workbook["Sheet"])
 
-    write_sheet(workbook, "Solar", solar_projects)
-    write_sheet(workbook, "Wind", wind_projects)
-    write_sheet(workbook, "BESS", bess_projects)
-    write_sheet(workbook, "Hydro", hydro_projects)
+    write_sheet(workbook, "Solar", inject_defects(solar_projects))
+    write_sheet(workbook, "Wind", inject_defects(wind_projects))
+    write_sheet(workbook, "BESS", inject_defects(bess_projects))
+    write_sheet(workbook, "Hydro", inject_defects(hydro_projects))
 
     workbook.save(output_dir / "projects.xlsx")
 
