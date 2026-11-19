@@ -13,3 +13,4 @@ scratch/
 
 # Virtual environments
 .venv
+.env
