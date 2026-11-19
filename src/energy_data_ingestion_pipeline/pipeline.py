@@ -1,12 +1,18 @@
 from pathlib import Path
 
 from energy_data_ingestion_pipeline.clean import clean_records
+from energy_data_ingestion_pipeline.db import get_connection
 from energy_data_ingestion_pipeline.extract import extract_records
+from energy_data_ingestion_pipeline.load import load_raw_projects
 from energy_data_ingestion_pipeline.validate import validate_records
 
 
 def run(folder: Path) -> None:
     project_records, _plan_records = extract_records(folder)
+
+    with get_connection() as conn:
+        loaded = load_raw_projects(conn, project_records)
+    print(f"L0 rows loaded: {loaded}")
 
     cleaned_records = clean_records(project_records)
 
