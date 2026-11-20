@@ -24,6 +24,13 @@ INSERT_L1_QUARANTINE = """
     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 """
 
+INSERT_L0_PRODUCTION_PLAN = """
+    INSERT INTO l0.raw_production_plan (
+        project_id, month, planned_energy_mwh, forecast_version, source_file,
+        source_sheet, source_row
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+"""
+
 DATA_COLUMNS = [
     "project_id",
     "project_name",
@@ -36,6 +43,13 @@ DATA_COLUMNS = [
     "turbine_count",
     "power_mw",
     "energy_mwh",
+]
+
+PLAN_COLUMNS = [
+    "project_id",
+    "month",
+    "planned_energy_mwh",
+    "forecast_version",
 ]
 
 
@@ -59,6 +73,16 @@ def record_to_l1_row(record: dict) -> tuple:
     values = []
     for column in DATA_COLUMNS:
         values.append(record.get(column))
+    values.append(record["source_file"])
+    values.append(record["source_sheet"])
+    values.append(record["source_row"])
+    return tuple(values)
+
+
+def record_to_l0_plan_row(record: dict) -> tuple:
+    values = []
+    for column in PLAN_COLUMNS:
+        values.append(to_text(record.get(column)))
     values.append(record["source_file"])
     values.append(record["source_sheet"])
     values.append(record["source_row"])
@@ -106,4 +130,15 @@ def load_l1_quarantine(conn: psycopg.Connection, records: list[dict]) -> int:
     with conn.cursor() as cur:
         cur.execute("TRUNCATE l1.quarantine_projects")
         cur.executemany(INSERT_L1_QUARANTINE, rows)
+    return len(rows)
+
+
+def load_l0_production_plan(conn: psycopg.Connection, records: list[dict]) -> int:
+    rows = []
+    for record in records:
+        rows.append(record_to_l0_plan_row(record))
+
+    with conn.cursor() as cur:
+        cur.execute("TRUNCATE l0.raw_production_plan")
+        cur.executemany(INSERT_L0_PRODUCTION_PLAN, rows)
     return len(rows)
