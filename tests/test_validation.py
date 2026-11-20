@@ -3,6 +3,7 @@ from datetime import date
 from energy_data_ingestion_pipeline.validate import (
     check_capacity_positive,
     check_cod_valid,
+    check_plan_month_valid,
     check_project_id_present,
     check_status_allowed,
     validate_record,
@@ -105,3 +106,20 @@ def test_cod_rules() -> None:
     )
     assert check_cod_valid(VALID_RECORD) is None
     assert check_cod_valid(cod_2050_date) is None
+
+
+def test_plan_month_check_returns_correct_validation() -> None:
+    months = [
+        {"project_id": "SOL-001", "month": date(2025, 1, 1)},
+        {"project_id": "SOL-002", "month": date(2025, 1, 4)},
+        {"project_id": "SOL-003", "month": "2025-01-01"},
+        {"project_id": "SOL-004"},
+    ]
+
+    assert check_plan_month_valid(months[0]) is None
+    assert (
+        check_plan_month_valid(months[1])
+        == "month is not the 1st day of the month: 2025-01-04"
+    )
+    assert check_plan_month_valid(months[2]) == "month is not a date: 2025-01-01"
+    assert check_plan_month_valid(months[3]) == "month is missing"

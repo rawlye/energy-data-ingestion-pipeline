@@ -47,6 +47,19 @@ def check_cod_valid(record: dict) -> str | None:
         return None
 
 
+def check_plan_month_valid(record: dict) -> str | None:
+    month = record.get("month")
+
+    if month is None or month == "":
+        return "month is missing"
+    elif not isinstance(month, date):
+        return f"month is not a date: {month}"
+    elif month.day != 1:
+        return f"month is not the 1st day of the month: {month}"
+    else:
+        return None
+
+
 RULES = [
     check_project_id_present,
     check_status_allowed,
