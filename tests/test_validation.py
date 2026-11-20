@@ -3,6 +3,7 @@ from datetime import date
 from energy_data_ingestion_pipeline.validate import (
     check_capacity_positive,
     check_cod_valid,
+    check_forecast_version,
     check_plan_month_valid,
     check_planned_energy_mwh,
     check_project_id_present,
@@ -148,3 +149,23 @@ def test_check_planned_energy_correctness() -> None:
         == "planned_energy_mwh is negative number: -12.4"
     )
     assert check_planned_energy_mwh(planned_energy[4]) is None
+
+
+def test_forecast_version_returns_correct_validation() -> None:
+    forecast_version = [
+        {"project_id": "SOL-001", "forecast_version": 1},
+        {"project_id": "SOL-001"},
+        {"project_id": "SOL-001", "forecast_version": "n/a"},
+        {"project_id": "SOL-001", "forecast_version": 0},
+    ]
+
+    assert check_forecast_version(forecast_version[0]) is None
+    assert check_forecast_version(forecast_version[1]) == "forecast_version is missing"
+    assert (
+        check_forecast_version(forecast_version[2])
+        == "forecast_version is invalid format: n/a"
+    )
+    assert (
+        check_forecast_version(forecast_version[3])
+        == "forecast_version can't be negative or 0: 0"
+    )

@@ -73,6 +73,19 @@ def check_planned_energy_mwh(record: dict) -> str | None:
         return None
 
 
+def check_forecast_version(record: dict) -> str | None:
+    forecast_version = record.get("forecast_version")
+
+    if forecast_version is None or forecast_version == "":
+        return "forecast_version is missing"
+    elif not isinstance(forecast_version, int):
+        return f"forecast_version is invalid format: {forecast_version}"
+    elif forecast_version < 1:
+        return f"forecast_version can't be negative or 0: {forecast_version}"
+    else:
+        return None
+
+
 RULES = [
     check_project_id_present,
     check_status_allowed,
