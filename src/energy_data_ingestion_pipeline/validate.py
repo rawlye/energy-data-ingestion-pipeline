@@ -60,6 +60,19 @@ def check_plan_month_valid(record: dict) -> str | None:
         return None
 
 
+def check_planned_energy_mwh(record: dict) -> str | None:
+    planned_energy = record.get("planned_energy_mwh")
+
+    if planned_energy is None or planned_energy == "":
+        return "planned_energy_mwh is missing"
+    elif not isinstance(planned_energy, (int, float)):
+        return f"planned_energy_mwh is not a number: {planned_energy}"
+    elif planned_energy < 0:
+        return f"planned_energy_mwh is negative number: {planned_energy}"
+    else:
+        return None
+
+
 RULES = [
     check_project_id_present,
     check_status_allowed,

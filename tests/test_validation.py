@@ -4,6 +4,7 @@ from energy_data_ingestion_pipeline.validate import (
     check_capacity_positive,
     check_cod_valid,
     check_plan_month_valid,
+    check_planned_energy_mwh,
     check_project_id_present,
     check_status_allowed,
     validate_record,
@@ -123,3 +124,27 @@ def test_plan_month_check_returns_correct_validation() -> None:
     )
     assert check_plan_month_valid(months[2]) == "month is not a date: 2025-01-01"
     assert check_plan_month_valid(months[3]) == "month is missing"
+
+
+def test_check_planned_energy_correctness() -> None:
+    planned_energy = [
+        {"project_id": "SOL-001", "planned_energy_mwh": 12.4},
+        {"project_id": "SOL-001", "planned_energy_mwh": "n/a"},
+        {"project_id": "SOL-001"},
+        {"project_id": "SOL-001", "planned_energy_mwh": -12.4},
+        {"project_id": "SOL-001", "planned_energy_mwh": 0},
+    ]
+
+    assert check_planned_energy_mwh(planned_energy[0]) is None
+    assert (
+        check_planned_energy_mwh(planned_energy[1])
+        == "planned_energy_mwh is not a number: n/a"
+    )
+    assert (
+        check_planned_energy_mwh(planned_energy[2]) == "planned_energy_mwh is missing"
+    )
+    assert (
+        check_planned_energy_mwh(planned_energy[3])
+        == "planned_energy_mwh is negative number: -12.4"
+    )
+    assert check_planned_energy_mwh(planned_energy[4]) is None
