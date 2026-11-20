@@ -17,3 +17,14 @@ CREATE TABLE l0.raw_projects (
     source_row INTEGER,
     loaded_at TIMESTAMPTZ DEFAULT now()
 );
+
+CREATE TABLE l0.raw_production_plan (
+    project_id TEXT,
+    month TEXT,
+    planned_energy_mwh TEXT,
+    forecast_version TEXT,
+    source_file TEXT,
+    source_sheet TEXT,
+    source_row INTEGER,
+    loaded_at TIMESTAMPTZ DEFAULT now()
+);
