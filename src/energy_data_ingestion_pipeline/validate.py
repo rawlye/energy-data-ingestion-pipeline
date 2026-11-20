@@ -93,5 +93,4 @@ if __name__ == "__main__":
 
     valid_rows, invalid_rows = validate_records(validation_rows)
 
-    print(valid_rows)
-    print(invalid_rows)
+    print(invalid_rows[0])
