@@ -1,6 +1,9 @@
 from datetime import date
 
-from energy_data_ingestion_pipeline.schema import ALLOWED_STATUSES, CAPACITY_FIELDS
+from energy_data_ingestion_pipeline.schema import (
+    ALLOWED_STATUSES,
+    CAPACITY_FIELDS,
+)
 
 
 def check_project_id_present(record: dict) -> str | None:
@@ -86,30 +89,37 @@ def check_forecast_version(record: dict) -> str | None:
         return None
 
 
-RULES = [
+PROJECT_RULES = [
     check_project_id_present,
     check_status_allowed,
     check_capacity_positive,
     check_cod_valid,
 ]
 
+PLAN_RULES = [
+    check_project_id_present,
+    check_plan_month_valid,
+    check_planned_energy_mwh,
+    check_forecast_version,
+]
 
-def validate_record(record: dict) -> list[str]:
+
+def validate_record(record: dict, rules: list) -> list[str]:
     errors_list = []
 
-    for rule in RULES:
+    for rule in rules:
         validation_result = rule(record)
         if validation_result is not None:
             errors_list.append(validation_result)
     return errors_list
 
 
-def validate_records(records: list[dict]) -> tuple[list[dict], list[dict]]:
+def validate_records(records: list[dict], rules: list) -> tuple[list[dict], list[dict]]:
     valid_rows = []
     invalid_rows = []
 
     for record in records:
-        validation_result = validate_record(record)
+        validation_result = validate_record(record, rules)
 
         if validation_result != []:
             rejected_record = record.copy()
@@ -130,6 +140,6 @@ if __name__ == "__main__":
         {"project_type": "Solar"},
     ]
 
-    valid_rows, invalid_rows = validate_records(validation_rows)
+    valid_rows, invalid_rows = validate_records(validation_rows, PROJECT_RULES)
 
     print(invalid_rows[0])

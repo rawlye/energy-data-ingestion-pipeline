@@ -9,7 +9,7 @@ from energy_data_ingestion_pipeline.load import (
     load_l1_quarantine,
     load_raw_projects,
 )
-from energy_data_ingestion_pipeline.validate import validate_records
+from energy_data_ingestion_pipeline.validate import PROJECT_RULES, validate_records
 
 
 def run(folder: Path) -> None:
@@ -23,7 +23,7 @@ def run(folder: Path) -> None:
 
     cleaned_records = clean_records(project_records)
 
-    valid_rows, invalid_rows = validate_records(cleaned_records)
+    valid_rows, invalid_rows = validate_records(cleaned_records, PROJECT_RULES)
 
     with get_connection() as conn:
         loaded_l1_rows = load_l1_projects(conn, valid_rows)

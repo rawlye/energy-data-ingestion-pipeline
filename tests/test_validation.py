@@ -1,6 +1,7 @@
 from datetime import date
 
 from energy_data_ingestion_pipeline.validate import (
+    PROJECT_RULES,
     check_capacity_positive,
     check_cod_valid,
     check_forecast_version,
@@ -45,9 +46,11 @@ def test_validation_record() -> None:
     wrong_status = VALID_RECORD | {"status": "Operational"}
     wrong_id_and_status = VALID_RECORD | {"project_id": "", "status": "Operational"}
 
-    assert validate_record(VALID_RECORD) == []
-    assert validate_record(wrong_status) == ["status Operational is not allowed"]
-    assert validate_record(wrong_id_and_status) == [
+    assert validate_record(VALID_RECORD, PROJECT_RULES) == []
+    assert validate_record(wrong_status, PROJECT_RULES) == [
+        "status Operational is not allowed"
+    ]
+    assert validate_record(wrong_id_and_status, PROJECT_RULES) == [
         "project_id is missing",
         "status Operational is not allowed",
     ]
@@ -58,7 +61,7 @@ def test_validate_records() -> None:
     wrong_id_and_status = VALID_RECORD | {"project_id": "", "status": "Operational"}
     rows = [VALID_RECORD, wrong_id_and_status, wrong_status]
 
-    valid_rows, invalid_rows = validate_records(rows)
+    valid_rows, invalid_rows = validate_records(rows, PROJECT_RULES)
 
     assert valid_rows == [VALID_RECORD]
 
