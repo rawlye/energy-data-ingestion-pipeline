@@ -8,6 +8,7 @@ from energy_data_ingestion_pipeline.validate import (
     check_forecast_version,
     check_plan_month_valid,
     check_planned_energy_mwh,
+    check_plans_against_projects,
     check_project_id_present,
     check_project_type,
     check_status_allowed,
@@ -207,3 +208,32 @@ def test_check_project_type_returns_correct_validation() -> None:
     assert check_project_type(records[0]) is None
     assert check_project_type(records[1]) == "project_type is missing"
     assert check_project_type(records[2]) == "project_type is invalid: Aero"
+
+
+def test_plans_are_correctly_evaluated_against_actual_projects() -> None:
+    plans = [
+        {"project_id": "SOL-001"},
+        {"project_id": "SOL-999"},
+        {"project_id": "WND-003"},
+    ]
+    valid_projects = [{"project_id": "SOL-001"}]
+    rejected_projects = [{"project_id": "WND-003"}]
+
+    good_plans, bad_plans = check_plans_against_projects(
+        plans, valid_projects, rejected_projects
+    )
+
+    expected_good_plans = [{"project_id": "SOL-001"}]
+    expected_bad_plans = [
+        {
+            "project_id": "SOL-999",
+            "reject_reason": ["project_id doesn't exist in project rows: SOL-999"],
+        },
+        {
+            "project_id": "WND-003",
+            "reject_reason": ["project_id is in rejected project rows: WND-003"],
+        },
+    ]
+
+    assert good_plans == expected_good_plans
+    assert bad_plans == expected_bad_plans

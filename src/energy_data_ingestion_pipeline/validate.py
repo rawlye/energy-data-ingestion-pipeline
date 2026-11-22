@@ -141,6 +141,46 @@ def validate_records(records: list[dict], rules: list) -> tuple[list[dict], list
     return valid_rows, invalid_rows
 
 
+def check_plans_against_projects(
+    plans: list[dict],
+    valid_projects: list[dict],
+    rejected_projects: list[dict],
+) -> tuple[list[dict], list[dict]]:
+
+    valid_ids = set()
+    rejected_projects_ids = set()
+
+    kept_plans = []
+    set_aside_plans = []
+
+    for project in valid_projects:
+        valid_ids.add(project["project_id"])
+
+    for rejected_project in rejected_projects:
+        rejected_projects_ids.add(rejected_project["project_id"])
+
+    for plan in plans:
+        if plan["project_id"] in valid_ids:
+            kept_plans.append(plan)
+        elif plan["project_id"] in rejected_projects_ids:
+            rejected_plan = plan.copy()
+            rejected_plan["reject_reason"] = [
+                f"project_id is in rejected project rows: {rejected_plan['project_id']}"
+            ]
+            set_aside_plans.append(rejected_plan)
+        else:
+            non_exist_plan = plan.copy()
+            non_exist_plan["reject_reason"] = [
+                (
+                    "project_id doesn't exist "
+                    f"in project rows: {non_exist_plan['project_id']}"
+                )
+            ]
+            set_aside_plans.append(non_exist_plan)
+
+    return kept_plans, set_aside_plans
+
+
 if __name__ == "__main__":
     validation_rows = [
         {"project_id": "SOL-001", "status": "operational"},
