@@ -20,6 +20,16 @@ def check_status_allowed(record: dict) -> str | None:
     return None
 
 
+def check_project_type(record: dict) -> str | None:
+    project_type = record.get("project_type")
+    if project_type is None:
+        return "project_type is missing"
+    elif project_type not in CAPACITY_FIELDS:
+        return f"project_type is invalid: {project_type}"
+    else:
+        return None
+
+
 def check_capacity_positive(record: dict) -> str | None:
     if record.get("project_type") not in CAPACITY_FIELDS:
         return None
@@ -92,6 +102,7 @@ def check_forecast_version(record: dict) -> str | None:
 PROJECT_RULES = [
     check_project_id_present,
     check_status_allowed,
+    check_project_type,
     check_capacity_positive,
     check_cod_valid,
 ]

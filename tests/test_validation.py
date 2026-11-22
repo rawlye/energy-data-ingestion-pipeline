@@ -1,6 +1,7 @@
 from datetime import date
 
 from energy_data_ingestion_pipeline.validate import (
+    PLAN_RULES,
     PROJECT_RULES,
     check_capacity_positive,
     check_cod_valid,
@@ -8,6 +9,7 @@ from energy_data_ingestion_pipeline.validate import (
     check_plan_month_valid,
     check_planned_energy_mwh,
     check_project_id_present,
+    check_project_type,
     check_status_allowed,
     validate_record,
     validate_records,
@@ -19,6 +21,13 @@ VALID_RECORD = {
     "status": "operational",
     "commissioning_date": date(2025, 1, 1),
     "capacity_mwp": 12.5,
+}
+
+VALID_PLAN_RECORD = {
+    "project_id": "SOL-001",
+    "month": date(2026, 3, 1),
+    "planned_energy_mwh": 1157.42,
+    "forecast_version": 1,
 }
 
 
@@ -79,6 +88,20 @@ def test_validate_records() -> None:
     assert (
         "reject_reason" not in wrong_status  # checking that the original is untouched
     )
+
+
+def test_validate_record_uses_the_rule_list_its_given() -> None:
+    assert validate_record(VALID_PLAN_RECORD, PLAN_RULES) == []
+    assert validate_record(VALID_RECORD, PLAN_RULES) == [
+        "month is missing",
+        "planned_energy_mwh is missing",
+        "forecast_version is missing",
+    ]
+    assert validate_record(VALID_PLAN_RECORD, PROJECT_RULES) == [
+        "status None is not allowed",
+        "project_type is missing",
+        "commissioning_date is missing",
+    ]
 
 
 def test_check_wrong_capacity_is_rejected() -> None:
@@ -172,3 +195,15 @@ def test_forecast_version_returns_correct_validation() -> None:
         check_forecast_version(forecast_version[3])
         == "forecast_version can't be negative or 0: 0"
     )
+
+
+def test_check_project_type_returns_correct_validation() -> None:
+    records = [
+        {"project_id": "SOL-001", "project_type": "Solar"},
+        {"project_id": "SOL-001"},
+        {"project_id": "SOL-001", "project_type": "Aero"},
+    ]
+
+    assert check_project_type(records[0]) is None
+    assert check_project_type(records[1]) == "project_type is missing"
+    assert check_project_type(records[2]) == "project_type is invalid: Aero"

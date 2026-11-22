@@ -1,6 +1,6 @@
 from datetime import date
 
-from energy_data_ingestion_pipeline.load import record_to_row, to_text
+from energy_data_ingestion_pipeline.load import record_to_l0_row, to_text
 
 
 def test_to_text_converts_to_str() -> None:
@@ -38,4 +38,4 @@ def test_record_to_row_keeps_column_order() -> None:
         2,  # 14 source_row - stays as integer
     )
 
-    assert record_to_row(record) == expected
+    assert record_to_l0_row(record) == expected

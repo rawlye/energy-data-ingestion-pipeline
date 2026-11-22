@@ -36,3 +36,27 @@ CREATE TABLE l1.quarantine_projects (
     reject_reason TEXT NOT NULL, -- all data can be null, only reject_reason cannot
     quarantined_at TIMESTAMPTZ DEFAULT now()
 );
+
+CREATE TABLE l1.plans (
+    project_id TEXT,
+    month DATE,
+    planned_energy_mwh NUMERIC NOT NULL,
+    forecast_version INTEGER,
+    source_file TEXT,
+    source_sheet TEXT,
+    source_row INTEGER,
+    loaded_at TIMESTAMPTZ DEFAULT now(),
+    PRIMARY KEY (project_id, month, forecast_version)
+);
+
+CREATE TABLE l1.quarantine_plans (
+    project_id TEXT,
+    month TEXT,
+    planned_energy_mwh TEXT,
+    forecast_version TEXT,
+    source_file TEXT,
+    source_sheet TEXT,
+    source_row INTEGER,
+    reject_reason TEXT NOT NULL, -- all data can be null, only reject_reason cannot
+    quarantined_at TIMESTAMPTZ DEFAULT now()
+);
