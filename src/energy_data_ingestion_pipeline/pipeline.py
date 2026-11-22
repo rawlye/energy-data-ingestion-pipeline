@@ -14,6 +14,7 @@ from energy_data_ingestion_pipeline.load import (
 from energy_data_ingestion_pipeline.validate import (
     PLAN_RULES,
     PROJECT_RULES,
+    check_plans_against_projects,
     validate_records,
 )
 
@@ -34,10 +35,16 @@ def run(folder: Path) -> None:
     )
     valid_plan_rows, invalid_plan_rows = validate_records(plan_records, PLAN_RULES)
 
+    kept_plans, set_aside_plans = check_plans_against_projects(
+        valid_plan_rows, valid_project_rows, invalid_project_rows
+    )
+
+    invalid_plan_rows.extend(set_aside_plans)
+
     with get_connection() as conn:
         loaded_l1_rows = load_l1_projects(conn, valid_project_rows)
         loaded_l1_quarantine = load_l1_quarantine(conn, invalid_project_rows)
-        loaded_l1_plans = load_l1_plans(conn, valid_plan_rows)
+        loaded_l1_plans = load_l1_plans(conn, kept_plans)
         loaded_l1_plan_quarantine = load_l1_quarantine_plans(conn, invalid_plan_rows)
     print(f"L1 rows added: {loaded_l1_rows}")
     print(f"L1 quarantine rows added: {loaded_l1_quarantine}")
