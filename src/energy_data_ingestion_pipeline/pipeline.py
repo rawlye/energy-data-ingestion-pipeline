@@ -3,7 +3,7 @@ from pathlib import Path
 from energy_data_ingestion_pipeline.clean import clean_records
 from energy_data_ingestion_pipeline.db import get_connection
 from energy_data_ingestion_pipeline.extract import extract_records
-from energy_data_ingestion_pipeline.l2 import build_dim_project
+from energy_data_ingestion_pipeline.l2 import build_dim_date, build_dim_project
 from energy_data_ingestion_pipeline.load import (
     load_l0_production_plan,
     load_l0_raw_projects,
@@ -54,7 +54,9 @@ def run(folder: Path) -> None:
 
     with get_connection() as conn:
         loaded_l2_dim_project = build_dim_project(conn)
+        loaded_l2_dim_date = build_dim_date(conn)
     print(f"L2 dim_project rows added: {loaded_l2_dim_project}")
+    print(f"L2 dim_date rows added: {loaded_l2_dim_date}")
 
 
 if __name__ == "__main__":

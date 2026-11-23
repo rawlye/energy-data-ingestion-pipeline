@@ -16,38 +16,33 @@ CREATE TABLE l2.dim_project (
     installed_capacity_mw NUMERIC(12, 2) NOT NULL
 );
 
-INSERT INTO l2.dim_project (
-    project_id,
-    project_name,
-    project_type,
-    region,
-    status,
-    commissioning_date,
-    capacity_mwp,
-    capacity_mw,
-    turbine_count,
-    power_mw,
-    energy_mwh,
-    installed_capacity_mw
-)
+CREATE TABLE l2.dim_date (
+    date_key INTEGER PRIMARY KEY,
+    month_start DATE NOT NULL UNIQUE,
+    year INTEGER NOT NULL,
+    quarter INTEGER NOT NULL,
+    month INTEGER NOT NULL,
+    month_name TEXT NOT NULL,
+    hours_in_month INTEGER NOT NULL
+);
 
+WITH months AS (
+    SELECT generate_series(DATE '2020-01-01', DATE '2035-12-01', INTERVAL '1 month')::date
+        AS month_start
+)
 SELECT
-    project_id,
-    project_name,
-    project_type,
-    region,
-    status,
-    commissioning_date,
-    capacity_mwp,
-    capacity_mw,
-    turbine_count,
-    power_mw,
-    energy_mwh,
-    CASE
-        WHEN project_type = 'Solar'
-            THEN capacity_mwp
-        WHEN project_type in ('Wind', 'Hydro')
-            THEN capacity_mw
-        WHEN project_type = 'BESS'
-            THEN power_mw END AS installed_capacity_mw
-FROM l1.projects;
+    EXTRACT(YEAR FROM month_start) * 100 + EXTRACT(MONTH FROM month_start)::int AS date_key,
+    month_start,
+    EXTRACT(YEAR FROM month_start)::int AS year,
+    CASE WHEN EXTRACT(MONTH FROM month_start) IN (1, 2, 3)
+            THEN 1
+        WHEN EXTRACT(MONTH FROM month_start) IN (4, 5, 6)
+            THEN 2
+        WHEN EXTRACT(MONTH FROM month_start) IN (7, 8, 9)
+            THEN 3
+        WHEN EXTRACT(MONTH FROM month_start) IN (10, 11, 12)
+            THEN 4 END AS quarter,
+    EXTRACT(MONTH FROM month_start) AS month,
+    TO_CHAR(month_start, 'FMMonth') AS month_name,
+    ((month_start + INTERVAL '1 month')::date - month_start) * 24 AS hours_in_month
+FROM months;
