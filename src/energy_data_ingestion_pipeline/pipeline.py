@@ -3,7 +3,12 @@ from pathlib import Path
 from energy_data_ingestion_pipeline.clean import clean_records
 from energy_data_ingestion_pipeline.db import get_connection
 from energy_data_ingestion_pipeline.extract import extract_records
-from energy_data_ingestion_pipeline.l2 import build_dim_date, build_dim_project
+from energy_data_ingestion_pipeline.l2 import (
+    build_dim_date,
+    build_dim_project,
+    build_fact_production_plan,
+    reset_l2,
+)
 from energy_data_ingestion_pipeline.load import (
     load_l0_production_plan,
     load_l0_raw_projects,
@@ -53,10 +58,13 @@ def run(folder: Path) -> None:
     print(f"L1 plan quarantine rows added: {loaded_l1_plan_quarantine}")
 
     with get_connection() as conn:
+        reset_l2(conn)
         loaded_l2_dim_project = build_dim_project(conn)
         loaded_l2_dim_date = build_dim_date(conn)
+        loaded_l2_fact_plan = build_fact_production_plan(conn)
     print(f"L2 dim_project rows added: {loaded_l2_dim_project}")
     print(f"L2 dim_date rows added: {loaded_l2_dim_date}")
+    print(f"L2 fact_production_plan rows added: {loaded_l2_fact_plan}")
 
 
 if __name__ == "__main__":

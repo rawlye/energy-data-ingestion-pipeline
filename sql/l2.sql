@@ -26,23 +26,10 @@ CREATE TABLE l2.dim_date (
     hours_in_month INTEGER NOT NULL
 );
 
-WITH months AS (
-    SELECT generate_series(DATE '2020-01-01', DATE '2035-12-01', INTERVAL '1 month')::date
-        AS month_start
-)
-SELECT
-    EXTRACT(YEAR FROM month_start) * 100 + EXTRACT(MONTH FROM month_start)::int AS date_key,
-    month_start,
-    EXTRACT(YEAR FROM month_start)::int AS year,
-    CASE WHEN EXTRACT(MONTH FROM month_start) IN (1, 2, 3)
-            THEN 1
-        WHEN EXTRACT(MONTH FROM month_start) IN (4, 5, 6)
-            THEN 2
-        WHEN EXTRACT(MONTH FROM month_start) IN (7, 8, 9)
-            THEN 3
-        WHEN EXTRACT(MONTH FROM month_start) IN (10, 11, 12)
-            THEN 4 END AS quarter,
-    EXTRACT(MONTH FROM month_start) AS month,
-    TO_CHAR(month_start, 'FMMonth') AS month_name,
-    ((month_start + INTERVAL '1 month')::date - month_start) * 24 AS hours_in_month
-FROM months;
+CREATE TABLE l2.fact_production_plan (
+    project_key INTEGER NOT NULL REFERENCES l2.dim_project (project_key),
+    date_key INTEGER NOT NULL REFERENCES l2.dim_date (date_key),
+    forecast_version INT NOT NULL,
+    planned_energy_mwh NUMERIC(12, 2) NOT NULL,
+    PRIMARY KEY (project_key, date_key, forecast_version)
+);
