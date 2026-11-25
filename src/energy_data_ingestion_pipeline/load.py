@@ -1,4 +1,6 @@
-import psycopg
+from typing import LiteralString
+
+from psycopg import Connection, sql
 
 INSERT_L0_RAW_PROJECT = """
     INSERT INTO l0.raw_projects (
@@ -73,129 +75,39 @@ def to_text(value) -> str | None:
     return str(value)
 
 
-def record_to_l0_row(record: dict) -> tuple:
+def record_to_row(
+    record: dict, columns: list[str], as_text: bool, with_reason: bool
+) -> tuple:
     values = []
-    for column in DATA_COLUMNS:
-        values.append(to_text(record.get(column)))
+    for column in columns:
+        row_value = record.get(column)
+        if as_text:
+            row_value = to_text(row_value)
+        values.append(row_value)
     values.append(record["source_file"])
     values.append(record["source_sheet"])
     values.append(record["source_row"])
+    if with_reason:
+        values.append("; ".join(record["reject_reason"]))
     return tuple(values)
 
 
-def record_to_l0_plan_row(record: dict) -> tuple:
-    values = []
-    for column in PLAN_COLUMNS:
-        values.append(to_text(record.get(column)))
-    values.append(record["source_file"])
-    values.append(record["source_sheet"])
-    values.append(record["source_row"])
-    return tuple(values)
-
-
-def record_to_l1_row(record: dict) -> tuple:
-    values = []
-    for column in DATA_COLUMNS:
-        values.append(record.get(column))
-    values.append(record["source_file"])
-    values.append(record["source_sheet"])
-    values.append(record["source_row"])
-    return tuple(values)
-
-
-def record_to_l1_quarantine(record: dict) -> tuple:
-    values = []
-    for column in DATA_COLUMNS:
-        values.append(to_text(record.get(column)))
-    values.append(record["source_file"])
-    values.append(record["source_sheet"])
-    values.append(record["source_row"])
-    values.append("; ".join(record["reject_reason"]))
-    return tuple(values)
-
-
-def record_to_l1_plan_row(record: dict) -> tuple:
-    values = []
-    for column in PLAN_COLUMNS:
-        values.append(record.get(column))
-    values.append(record["source_file"])
-    values.append(record["source_sheet"])
-    values.append(record["source_row"])
-    return tuple(values)
-
-
-def record_to_l1_plan_quarantine_row(record: dict) -> tuple:
-    values = []
-    for column in PLAN_COLUMNS:
-        values.append(to_text(record.get(column)))
-    values.append(record["source_file"])
-    values.append(record["source_sheet"])
-    values.append(record["source_row"])
-    values.append("; ".join(record["reject_reason"]))
-    return tuple(values)
-
-
-def load_l0_raw_projects(conn: psycopg.Connection, records: list[dict]) -> int:
+def load_to_layer(
+    conn: Connection,
+    records: list[dict],
+    insert_statement: LiteralString,
+    schema_name: str,
+    table_name: str,
+    as_text: bool,
+    with_reason: bool,
+    columns: list[str],
+) -> int:
     rows = []
     for record in records:
-        rows.append(record_to_l0_row(record))
-
+        rows.append(record_to_row(record, columns, as_text, with_reason))
     with conn.cursor() as cur:
-        cur.execute("TRUNCATE l0.raw_projects")
-        cur.executemany(INSERT_L0_RAW_PROJECT, rows)
-    return len(rows)
-
-
-def load_l0_production_plan(conn: psycopg.Connection, records: list[dict]) -> int:
-    rows = []
-    for record in records:
-        rows.append(record_to_l0_plan_row(record))
-
-    with conn.cursor() as cur:
-        cur.execute("TRUNCATE l0.raw_production_plan")
-        cur.executemany(INSERT_L0_PRODUCTION_PLAN, rows)
-    return len(rows)
-
-
-def load_l1_projects(conn: psycopg.Connection, records: list[dict]) -> int:
-    rows = []
-    for record in records:
-        rows.append(record_to_l1_row(record))
-
-    with conn.cursor() as cur:
-        cur.execute("TRUNCATE l1.projects")
-        cur.executemany(INSERT_L1_PROJECT, rows)
-    return len(rows)
-
-
-def load_l1_quarantine(conn: psycopg.Connection, records: list[dict]) -> int:
-    rows = []
-    for record in records:
-        rows.append(record_to_l1_quarantine(record))
-
-    with conn.cursor() as cur:
-        cur.execute("TRUNCATE l1.quarantine_projects")
-        cur.executemany(INSERT_L1_QUARANTINE, rows)
-    return len(rows)
-
-
-def load_l1_plans(conn: psycopg.Connection, records: list[dict]) -> int:
-    rows = []
-    for record in records:
-        rows.append(record_to_l1_plan_row(record))
-
-    with conn.cursor() as cur:
-        cur.execute("TRUNCATE l1.plans")
-        cur.executemany(INSERT_L1_PLANS, rows)
-    return len(rows)
-
-
-def load_l1_quarantine_plans(conn: psycopg.Connection, records: list[dict]) -> int:
-    rows = []
-    for record in records:
-        rows.append(record_to_l1_plan_quarantine_row(record))
-
-    with conn.cursor() as cur:
-        cur.execute("TRUNCATE l1.quarantine_plans")
-        cur.executemany(INSERT_L1_QUARANTINE_PLANS, rows)
+        cur.execute(
+            sql.SQL("TRUNCATE {};").format(sql.Identifier(schema_name, table_name))
+        )
+        cur.executemany(insert_statement, rows)
     return len(rows)

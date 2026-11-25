@@ -1,17 +1,18 @@
-from datetime import date, datetime
+from datetime import datetime
 
 from energy_data_ingestion_pipeline.load import (
-    record_to_l0_row,
-    record_to_l1_plan_quarantine_row,
+    DATA_COLUMNS,
+    PLAN_COLUMNS,
+    record_to_row,
     to_text,
 )
 
 
-def test_to_text_converts_to_str() -> None:
-    datum = date(2020, 2, 2)
+def test_that_to_text_returns_text_and_none() -> None:
+    datum = datetime(2020, 1, 1)
 
     assert to_text(7) == "7"
-    assert to_text(datum) == "2020-02-02"
+    assert to_text(datum) == "2020-01-01 00:00:00"
     assert to_text(None) is None
 
 
@@ -42,7 +43,7 @@ def test_record_to_row_keeps_column_order() -> None:
         2,  # 14 source_row - stays as integer
     )
 
-    assert record_to_l0_row(record) == expected
+    assert record_to_row(record, DATA_COLUMNS, True, False) == expected
 
 
 def test_record_to_l1_plan_quarantine_row_keeps_column_order() -> None:
@@ -74,4 +75,4 @@ def test_record_to_l1_plan_quarantine_row_keeps_column_order() -> None:
         ),
     )
 
-    assert record_to_l1_plan_quarantine_row(record) == expected
+    assert record_to_row(record, PLAN_COLUMNS, True, True) == expected
