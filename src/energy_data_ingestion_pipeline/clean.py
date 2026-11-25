@@ -1,7 +1,7 @@
 from energy_data_ingestion_pipeline.schema import CAPACITY_FIELDS
 
 
-def clean_record(record: dict) -> dict:
+def clean_project_record(record: dict) -> dict:
     row = record.copy()
     if row.get("status") is not None:
         row["status"] = row["status"].strip().lower()
@@ -23,7 +23,7 @@ def clean_record(record: dict) -> dict:
 def clean_records(records: list[dict]) -> list[dict]:
     cleaned_rows = []
     for record in records:
-        cleaned_rows.append(clean_record(record))
+        cleaned_rows.append(clean_project_record(record))
     return cleaned_rows
 
 
@@ -36,4 +36,4 @@ if __name__ == "__main__":
     ]
 
     for record in records:
-        print(clean_record(record))
+        print(clean_project_record(record))

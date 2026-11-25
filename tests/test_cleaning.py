@@ -1,4 +1,4 @@
-from energy_data_ingestion_pipeline.clean import clean_record, clean_records
+from energy_data_ingestion_pipeline.clean import clean_project_record, clean_records
 
 
 def test_clean_normalizes_status_and_keeps_input() -> None:
@@ -23,7 +23,16 @@ def test_convert_floats_leaving_unconvertable_values() -> None:
         {"project_type": "Wind"},
     ]
 
-    assert clean_record(records[0]) == {"project_type": "Wind", "capacity_mw": 12.5}
-    assert clean_record(records[1]) == {"project_type": "Wind", "capacity_mw": 12.5}
-    assert clean_record(records[2]) == {"project_type": "Wind", "capacity_mw": "n/a"}
-    assert clean_record(records[3]) == {"project_type": "Wind"}
+    assert clean_project_record(records[0]) == {
+        "project_type": "Wind",
+        "capacity_mw": 12.5,
+    }
+    assert clean_project_record(records[1]) == {
+        "project_type": "Wind",
+        "capacity_mw": 12.5,
+    }
+    assert clean_project_record(records[2]) == {
+        "project_type": "Wind",
+        "capacity_mw": "n/a",
+    }
+    assert clean_project_record(records[3]) == {"project_type": "Wind"}
